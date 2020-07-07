@@ -1,0 +1,49 @@
+apiVersion: kubevirt.io/v1alpha3
+kind: VirtualMachine
+metadata:
+  name: production
+spec:
+  running: false
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: production
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+            - name: disk0
+              disk:
+                bus: virtio
+            - name: cloudinitvolume
+              disk:
+                bus: virtio
+          interfaces:
+          - name: default
+            bridge: {}
+        resources:
+          requests:
+            memory: 2048M
+      networks:
+      - name: default
+        pod: {}
+      volumes:
+        - name: disk0
+          persistentVolumeClaim:
+            claimName: ubuntu
+        - name: cloudinitvolume
+          cloudInitNoCloud:
+            userData: |-
+              #cloud-config
+              chpasswd:
+                list: |
+                  ubuntu:ubuntu
+                  root:toor
+                expire: False
+              hostname: production
+              ssh_pwauth: True
+              disable_root: false
+              ssh_authorized_keys:
+              - ssh-rsa YOUR_SSH_PUB_KEY_HERE
